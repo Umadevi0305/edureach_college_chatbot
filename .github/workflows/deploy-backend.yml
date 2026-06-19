@@ -1,0 +1,25 @@
+  name: Deploy Backend
+
+  on:
+    push:
+      branches: [main]
+      paths: ["server/**", ".github/workflows/deploy-backend.yml"]
+    workflow_dispatch: {}
+
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Deploy over SSH
+          uses: appleboy/ssh-action@v1
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ubuntu
+            key: ${{ secrets.EC2_SSH_KEY }}
+            script: |
+              set -e
+              cd ~/edureach/server
+              git pull origin main
+              npm ci --omit=dev
+              pm2 restart edureach-api
+              pm2 save
